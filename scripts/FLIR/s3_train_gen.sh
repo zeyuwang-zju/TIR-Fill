@@ -1,0 +1,20 @@
+nohup python train_generator.py \
+--dataset_name FLIR \
+--seed 0 \
+--device cuda:1 \
+--image_root /home/data/wangzeyu/FLIR_ADAS_1_3/train/thermal_8_bit/ \
+--edge_root /home/data/wangzeyu/FLIR_ADAS_1_3/train/edge/ \
+--mask_root /home/data/wangzeyu/Image_Inpainting/mask_pconv/test_mask/testing_mask_dataset/ \
+--loadsize 288 \
+--cropsize 256 \
+--batch_size 4 \
+--num_workers 8 \
+--num_epochs 1000 \
+--lr 1e-4 \
+--beta1 0.5 \
+--beta2 0.9 \
+--sample_step 100 \
+--sample_size 4 \
+--edge_ckpt_path ./checkpoints/FLIR/edge/epoch_800.pth \
+--gen_ckpt_path None \
+>> FLIR_gen.out &
