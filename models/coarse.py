@@ -55,11 +55,6 @@ class SPADE_Resblock(nn.Module):
         out = self.spade2(out, edge)
         out = self.act2(out)
         out = self.conv2(out)
-
-        # if self.shortcut == None:
-        #     shortcut = feature
-        # else:
-        #     shortcut = self.shortcut(feature)
         
         return out + shortcut
 
@@ -77,48 +72,10 @@ class Block(nn.Module):
             get_act_layer(act_type),
         )
 
-        # if in_channels == out_channels:
-        #     self.shortcut = None
-        # else:
-        #     self.shortcut = nn.Conv2d(in_channels, out_channels, 1, 1, 0)
-
     def forward(self, x):
         out = self.conv_block(x)
 
-        # if self.shortcut == None:
-        #     shortcut = x
-        # else:
-        #     shortcut = self.shortcut(x)
-        # out = out + shortcut
-
-        # Remove ReLU at the end of the residual block
-        # http://torch.ch/blog/2016/02/04/resnets.html
-
         return out
-
-
-# class Downsample(nn.Module):
-#     def __init__(self, channels):
-#         super().__init__()
-#         self.conv = nn.Conv2d(channels, channels, 3, 2, 1)
-
-#     def forward(self, x):
-#         x = self.conv(x)
-
-#         return x
-
-    
-# class Upsample(nn.Module):
-#     def __init__(self, channels):
-#         super().__init__()
-#         self.conv = nn.Conv2d(channels, channels, 3, 1, 1)
-
-#     def forward(self, x):
-#         x = F.interpolate(x, scale_factor=2)
-#         x = self.conv(x)
-
-#         return x
-
 
 
 class Coarse_Generator(BaseNetwork):
@@ -180,13 +137,3 @@ class Coarse_Generator(BaseNetwork):
         out = torch.sigmoid(out)
 
         return out
-
-
-if __name__ == '__main__':
-    generator = Generator(residual_blocks=8, norm_type='instance', act_type='leaky', use_spectral_norm=True, init_weights=True)
-    print(generator)
-    masked_image = torch.randn(size=(2, 1, 256, 256))
-    edge = torch.randn(size=(2, 1, 256, 256))
-    mask = torch.randn(size=(2, 1, 256, 256))
-    outputs = generator(masked_image, edge, mask)
-    print(outputs.shape)

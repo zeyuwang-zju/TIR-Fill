@@ -4,8 +4,6 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from tqdm import tqdm
-from torchvision.utils import save_image
 
 from dataset import TrainDataset
 from models.edge_connect import EdgeGenerator
@@ -24,8 +22,6 @@ def initialize_model(opt, device):
     discriminator = Discriminator(in_channels=2, use_sigmoid=False, use_spectral_norm=True, init_weights=True).to(device)
     if opt.edge_ckpt_path is not None and os.path.exists(opt.edge_ckpt_path):
         edge_generator.load_state_dict(torch.load(opt.edge_ckpt_path)["edge_generator"])
-        # discriminator.load_state_dict(torch.load(opt.ckpt_path)["edge_discriminator"])
-        # start_epoch = torch.load(opt.ckpt_path)["edge_epoch"]
     if opt.gen_ckpt_path is not None and os.path.exists(opt.gen_ckpt_path):
         coarse_generator.load_state_dict(torch.load(opt.gen_ckpt_path)["coarse"])
         refined_generator.load_state_dict(torch.load(opt.gen_ckpt_path)["refined"])
@@ -48,9 +44,9 @@ if __name__ == '__main__':
     sample_step = opt.sample_step
     sample_size = opt.sample_size
 
-    image_root = opt.image_root # "/home/data/wangzeyu/FLIR_ADAS_1_3/train/thermal_8_bit/"
-    edge_root = opt.edge_root   # "/home/data/wangzeyu/FLIR_ADAS_1_3/train/edge/"
-    mask_root = opt.mask_root   # "/home/data/wangzeyu/Image_Inpainting/mask_pconv/test_mask/testing_mask_dataset/"
+    image_root = opt.image_root
+    edge_root = opt.edge_root 
+    mask_root = opt.mask_root
     load_size = opt.loadsize
     crop_size = opt.cropsize
     batch_size = opt.batch_size
@@ -68,13 +64,8 @@ if __name__ == '__main__':
     style = StyleLoss(device)
     perceptual = PerceptualLoss(device)
     adversarial_loss = AdversarialLoss(type='hinge')
-    # fm_loss_weight = opt.fm_loss_weight
 
     edge_generator, coarse_generator, refined_generator, discriminator, start_epoch = initialize_model(opt, device)
-
-    # edge_generator.eval()
-    # generator.train()
-    # discriminator.train()
 
     optimizer_G = optim.Adam(list(coarse_generator.parameters())+list(refined_generator.parameters()), lr, betas=[beta1, beta2])
     optimizer_D = optim.Adam(discriminator.parameters(), lr, betas=[beta1, beta2])
@@ -104,9 +95,6 @@ if __name__ == '__main__':
             dis_input_fake = torch.cat((refined_image.detach(), mask), dim=1)
             dis_real, dis_real_feat = discriminator(dis_input_real)        # in: (grayscale(1) + edge(1))
             dis_fake, dis_fake_feat = discriminator(dis_input_fake)        # in: (grayscale(1) + edge(1))
-            # dis_real_loss = adversarial_loss(dis_real, True, True)
-            # dis_fake_loss = adversarial_loss(dis_fake, False, True)
-            # dis_loss += (dis_real_loss + dis_fake_loss) / 2
             dis_real_loss = torch.mean(F.relu(1. - dis_real))
             dis_fake_loss = torch.mean(F.relu(1. + dis_fake))
             dis_loss += 0.5 * (dis_real_loss + dis_fake_loss)
@@ -114,7 +102,6 @@ if __name__ == '__main__':
             # generator adversarial loss
             gen_input_fake = torch.cat((refined_image, mask), dim=1)
             gen_fake, gen_fake_feat = discriminator(gen_input_fake)        # in: (grayscale(1) + edge(1))
-            # gen_gan_loss = adversarial_loss(gen_fake, True, False)
             gen_gan_loss = -torch.mean(gen_fake)
             gen_loss += gen_gan_loss * 0.1
 
@@ -132,13 +119,6 @@ if __name__ == '__main__':
                     + style(torch.cat((refined_image, refined_image, refined_image), dim=1), torch.cat((image, image, image), dim=1))
             gen_loss += style_loss * 120
 
-            # # generator feature matching loss
-            # gen_fm_loss = 0
-            # for i in range(len(dis_real_feat)):
-            #     gen_fm_loss += l1(gen_fake_feat[i], dis_real_feat[i].detach())
-            # gen_fm_loss = gen_fm_loss * fm_loss_weight
-            # gen_loss += gen_fm_loss
-
             optimizer_G.zero_grad()
             gen_loss.backward(retain_graph=True)
             optimizer_D.zero_grad()
@@ -148,10 +128,6 @@ if __name__ == '__main__':
 
             print(f'Epoch[{epoch}/{num_epochs}] | Batch[{batch_idx}/{num_batch}] | G_adv_loss: {gen_gan_loss:.3f} | l1_loss: {l1_loss:.3f} | perceptual_loss: {perceptual_loss:.3f} | style_loss: {style_loss:.3f} | D_loss: {dis_loss:.3f} | dis_real: {dis_real.mean():.3f} | dis_fake: {dis_fake.mean():.3f}')
 
-            if batch_idx % sample_step == 0:
-
-                save_list = torch.cat((recom_edge[:sample_size], masked_image[:sample_size], coarse_recom[:sample_size], refined_recom[:sample_size], image[:sample_size]))
-                save_image(save_list, os.path.join(sample_dir, f'epoch_{epoch}.jpg'), nrow=4)
 
         if (epoch + 1) % 50 == 0:
             ckpt = {'gen_epoch': epoch+1, 'coarse': coarse_generator.state_dict(), 'refined': refined_generator.state_dict(), 'gen_discriminator': discriminator.state_dict()}

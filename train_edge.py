@@ -39,9 +39,9 @@ if __name__ == '__main__':
     sample_step = opt.sample_step
     sample_size = opt.sample_size
 
-    image_root = opt.image_root # "/home/data/wangzeyu/FLIR_ADAS_1_3/train/thermal_8_bit/"
-    edge_root = opt.edge_root   # "/home/data/wangzeyu/FLIR_ADAS_1_3/train/edge/"
-    mask_root = opt.mask_root   # "/home/data/wangzeyu/Image_Inpainting/mask_pconv/test_mask/testing_mask_dataset/"
+    image_root = opt.image_root
+    edge_root = opt.edge_root 
+    mask_root = opt.mask_root 
     load_size = opt.loadsize
     crop_size = opt.cropsize
     batch_size = opt.batch_size
@@ -59,9 +59,6 @@ if __name__ == '__main__':
     adversarial_loss = AdversarialLoss(type='hinge')
     fm_loss_weight = opt.fm_loss_weight
 
-    # edge_generator = EdgeGenerator(residual_blocks=8, use_spectral_norm=True, init_weights=True).to(device)
-    # discriminator = Discriminator(in_channels=2, use_sigmoid=False, use_spectral_norm=True, init_weights=True).to(device)
-
     edge_generator, discriminator, start_epoch = initialize_model(opt, device)
 
     optimizer_G = optim.Adam(edge_generator.parameters(), lr, betas=[beta1, beta2])
@@ -69,8 +66,6 @@ if __name__ == '__main__':
 
     for epoch in range(start_epoch, num_epochs):
         for batch_idx, (masked_image, masked_edge, image, edge, mask) in enumerate(dataloader):
-            # print(masked_image.shape)
-            # exit()
             masked_image, masked_edge, image, edge, mask = masked_image.to(device), masked_edge.to(device), image.to(device), edge.to(device), mask.to(device)
             outputs = edge_generator(masked_image, masked_edge, mask)
             gen_loss = 0
@@ -85,24 +80,11 @@ if __name__ == '__main__':
             dis_fake_loss = adversarial_loss(dis_fake, False, True)
             dis_loss += (dis_real_loss + dis_fake_loss) / 2
 
-            # dis_real_loss = torch.mean(F.relu(1. - dis_real))
-            # dis_fake_loss = torch.mean(F.relu(1. + dis_fake))
-            # dis_loss += 0.5 * (dis_real_loss + dis_fake_loss)
-
-
             # generator adversarial loss
             gen_input_fake = torch.cat((image, mask, outputs), dim=1)
             gen_fake, gen_fake_feat = discriminator(gen_input_fake)        # in: (grayscale(1) + edge(1))
             gen_gan_loss = adversarial_loss(gen_fake, True, False)
             gen_loss += gen_gan_loss
-
-
-            # # generator feature matching loss
-            # gen_fm_loss = 0
-            # for i in range(len(dis_real_feat)):
-            #     gen_fm_loss += l1(gen_fake_feat[i], dis_real_feat[i].detach())
-            # gen_fm_loss = gen_fm_loss * fm_loss_weight
-            # gen_loss += gen_fm_loss
 
             optimizer_G.zero_grad()
             gen_loss.backward(retain_graph=True)
@@ -121,9 +103,6 @@ if __name__ == '__main__':
                 outputs.masked_fill_(zeros, 0.0)
 
                 recom = mask * edge + (1 - mask) * outputs
-
-                save_list = torch.cat((masked_edge[:sample_size], outputs[:sample_size], recom[:sample_size], edge[:sample_size], image[:sample_size]))
-                save_image(save_list, os.path.join(sample_dir, f'epoch_{epoch}.jpg'), nrow=4)
 
         if (epoch + 1) % 50 == 0:
             ckpt = {'edge_epoch': epoch+1, 'edge_generator': edge_generator.state_dict(), 'edge_discriminator': discriminator.state_dict()}

@@ -22,7 +22,6 @@ def preprocess(imgfile_path, save_path, low_threshold, high_threshold):
         for file in tqdm(files):
             img_path = os.path.join(root, file)
             edge = get_canny_edge(img_path, low_threshold, high_threshold)
-            # cv.imshow('edge', edge)
             cv.imwrite(os.path.join(save_path, file), edge)
 
 
@@ -33,7 +32,6 @@ if __name__ == '__main__':
     parser.add_argument("--save_path", type=str)
     parser.add_argument("--low_threshold", type=int, default=60, help="low_threshold of the canny edge")
     parser.add_argument("--high_threshold", type=int, default=120, help="high_threshold of the canny edge")
-    # parser.add_argument("--imgfile_path", type=str, default="monet2photo", help="name of the dataset")
 
     args = parser.parse_args()
 

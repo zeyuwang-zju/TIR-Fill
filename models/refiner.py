@@ -43,6 +43,7 @@ class GatedConv2d(nn.Module):
         x = self.activation(x) + shortcut
         return x
 
+
 class Refined_Generator(BaseNetwork):
     def __init__(self, residual_blocks=8, norm_type='instance', act_type='leaky', use_spectral_norm=True, init_weights=True):
         super(Refined_Generator, self).__init__()
@@ -99,15 +100,6 @@ class Refined_Generator(BaseNetwork):
         out = torch.sigmoid(out)
 
         return out
-
-if __name__ == '__main__':
-    refiner = Refiner(residual_blocks=8, norm_type='instance', act_type='leaky', use_spectral_norm=True, init_weights=True)
-    print(refiner)
-    image = torch.randn(size=(2, 1, 256, 256))
-    # edge = torch.randn(size=(2, 1, 256, 256))
-    mask = torch.randn(size=(2, 1, 256, 256))
-    outputs = refiner(image, mask)
-    print(outputs.shape)
 
 
         
