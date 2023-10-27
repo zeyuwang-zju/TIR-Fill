@@ -35,7 +35,9 @@ bash scripts/FLIR/s3_train_gen.sh
 ## EXPERIMENTS
 
 ![image](https://github.com/zeyuwang-zju/TIR-Fill/assets/112078495/6dae5e5e-2dca-404a-a623-e9321566ee4f)
-![image](https://github.com/zeyuwang-zju/TIR-Fill/assets/112078495/a3e67d6d-383a-4e16-9a33-167814497188)
+
+![1698389716734](https://github.com/zeyuwang-zju/TIR-Fill/assets/112078495/422c5bbd-06a5-418b-b6af-2dd520bcba57)
+
 
 
 ## CITATION
