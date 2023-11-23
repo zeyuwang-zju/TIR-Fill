@@ -26,7 +26,7 @@ bash scripts/FLIR/s3_train_gen.sh
 
 
 
-[1] Marcelo Bertalmio, Guillermo Sapiro, Vincent Caselles, and Coloma Ballester, “Image inpainting,” in Proceedings of the 27th annual conference on Computer graphics and interactive techniques, 2000, pp. 417–424.  
+[1] F.A.Group, “Flir thermal dataset for algorithm training,” https://www.flir.co.uk/oem/adas/adas-dataset-form/, 2019.
 
 [2] Guilin Liu, Fitsum A Reda, Kevin J Shih, Ting-Chun Wang, Andrew Tao, and Bryan Catanzaro, “Image inpainting for irregular holes using partial convolutions,” in Proceedings of the European conference on computer vision (ECCV), 2018, pp. 85–100 .
 
